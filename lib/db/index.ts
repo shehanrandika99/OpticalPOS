@@ -157,7 +157,7 @@ export async function testConnection(): Promise<DatabaseConnectionResult> {
   } finally {
     // Always release the client back to the pool
     if (client) {
-      client.release();
+      (client as PoolClient).release();
     }
     // Clean up timeout
     if (timeoutId) {
