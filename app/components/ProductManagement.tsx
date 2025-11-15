@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getUserId } from "@/lib/utils/auth";
 
 interface Product {
   id?: number;
@@ -15,6 +17,16 @@ interface Product {
 }
 
 export default function ProductManagement() {
+  const router = useRouter();
+  
+  // Check authentication on mount
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) {
+      router.push("/");
+    }
+  }, [router]);
+  
   const [formData, setFormData] = useState({
     productName: "",
     productSearchId: "",

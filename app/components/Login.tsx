@@ -29,18 +29,19 @@ export default function Login() {
 
       if (response.ok) {
         // Login successful
-        const { token, user } = data;
+        const { user } = data;
         
-        if (!token || !user) {
-          setError("Login response is missing token or user data");
+        if (!user || !user.id) {
+          setError("Login response is missing user data");
           return;
         }
         
-        // Save to localStorage
-        localStorage.setItem("token", token);
+        // Save to localStorage (only userId and username)
         localStorage.setItem("userId", user.id.toString());
         localStorage.setItem("username", user.username);
-        localStorage.setItem("firstName", user.firstName);
+        if (user.firstName) {
+          localStorage.setItem("firstName", user.firstName);
+        }
         
         // Navigate to dashboard
         router.push("/dashboard");

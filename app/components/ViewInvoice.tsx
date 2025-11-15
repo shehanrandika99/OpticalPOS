@@ -4,9 +4,18 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Invoice } from "@/lib/types/database";
+import { getUserId } from "@/lib/utils/auth";
 
 export default function ViewInvoice() {
   const router = useRouter();
+  
+  // Check authentication on mount
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) {
+      router.push("/");
+    }
+  }, [router]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState<string>("");

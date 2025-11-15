@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getUserId, getUsername, getFirstName, clearAuth } from "@/lib/utils/auth";
 
 interface UserData {
   userId: number;
@@ -24,22 +25,22 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
-    const firstName = localStorage.getItem("firstName");
+    // Check if user is authenticated (only check userId)
+    const userId = getUserId();
+    const username = getUsername();
+    const firstName = getFirstName();
 
-    if (!token || !userId || !firstName) {
-      // No token, redirect to login
+    if (!userId) {
+      // No userId, redirect to login
       router.push("/");
       return;
     }
 
     // Set user data
     setUser({
-      userId: parseInt(userId),
-      username: localStorage.getItem("username") || "",
-      firstName: firstName,
+      userId: userId,
+      username: username || "",
+      firstName: firstName || "",
     });
 
     setLoading(false);
@@ -76,11 +77,8 @@ export default function Dashboard() {
   }, [loading]);
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    localStorage.removeItem("firstName");
+    // Clear authentication data
+    clearAuth();
     
     // Redirect to login
     router.push("/");
@@ -432,7 +430,7 @@ export default function Dashboard() {
               <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
               <div>
                 <p className="font-semibold text-purple-900">Authentication Active</p>
-                <p className="text-xs text-purple-700">JWT tokens enabled</p>
+                <p className="text-xs text-purple-700">LocalStorage-based auth</p>
               </div>
             </div>
           </div>

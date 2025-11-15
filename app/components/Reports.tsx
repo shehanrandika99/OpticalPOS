@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getUserId } from "@/lib/utils/auth";
 
 interface DailyBreakdown {
   date: string;
@@ -30,6 +32,16 @@ interface IncomeReport {
 }
 
 export default function Reports() {
+  const router = useRouter();
+  
+  // Check authentication on mount
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) {
+      router.push("/");
+    }
+  }, [router]);
+  
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [report, setReport] = useState<IncomeReport | null>(null);

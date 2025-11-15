@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { query } from "@/lib/db";
-import { generateToken } from "@/lib/utils/jwt";
 import type { User } from "@/lib/types/database";
 
 // Hash password using SHA-256 (same as registration)
@@ -77,18 +76,10 @@ export async function POST(request: NextRequest) {
     // Remove password from response for security
     const { password: _, ...userWithoutPassword } = user;
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user.id!,
-      username: user.username,
-      firstName: user.firstName,
-    });
-
     return NextResponse.json(
       {
         success: true,
         message: "Login successful",
-        token,
         user: userWithoutPassword,
       },
       { status: 200 }

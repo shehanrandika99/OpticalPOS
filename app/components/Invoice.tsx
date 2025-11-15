@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { getUserId } from "@/lib/utils/auth";
 
 interface Product {
   id: number;
@@ -26,6 +27,14 @@ export default function Invoice() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const invoiceIdParam = searchParams.get("invoiceId");
+  
+  // Check authentication on mount
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) {
+      router.push("/");
+    }
+  }, [router]);
   
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
