@@ -1,11 +1,11 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 
 if (!process.env.JWT_SECRET) {
-  throw new Error("TEST_SECRET is not set");
+  throw new Error("JWT_SECRET is not set");
 }
 
-export const JWT_SECRET = process.env.JWT_SECRET;
-export const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "7d") as SignOptions["expiresIn"];
+export const JWT_SECRET: string = process.env.JWT_SECRET;
+export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 export interface JWTPayload {
   userId: number;
@@ -13,12 +13,10 @@ export interface JWTPayload {
   firstName: string;
 }
 
-const signOptions: SignOptions = {
-  expiresIn: JWT_EXPIRES_IN,
-};
-
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, signOptions);
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN as any,
+  });
 }
 
 export function verifyToken(token: string): JWTPayload | null {
