@@ -72,7 +72,13 @@ export async function GET(request: NextRequest) {
       [startDate, endDate]
     );
 
-    const incomeData = incomeResult.rows[0];
+    const incomeData = incomeResult.rows[0] || {
+      totalInvoices: "0",
+      totalIncome: "0",
+      totalPaid: "0",
+      totalBalance: "0",
+      totalDiscount: "0",
+    };
     const dailyBreakdown = dailyBreakdownResult.rows;
     const statusBreakdown = statusBreakdownResult.rows;
 
@@ -82,22 +88,22 @@ export async function GET(request: NextRequest) {
         report: {
           startDate,
           endDate,
-          totalInvoices: parseInt(incomeData.totalInvoices) || 0,
-          totalIncome: parseFloat(incomeData.totalIncome) || 0,
-          totalPaid: parseFloat(incomeData.totalPaid) || 0,
-          totalBalance: parseFloat(incomeData.totalBalance) || 0,
-          totalDiscount: parseFloat(incomeData.totalDiscount) || 0,
+          totalInvoices: parseInt(String(incomeData.totalInvoices)) || 0,
+          totalIncome: parseFloat(String(incomeData.totalIncome)) || 0,
+          totalPaid: parseFloat(String(incomeData.totalPaid)) || 0,
+          totalBalance: parseFloat(String(incomeData.totalBalance)) || 0,
+          totalDiscount: parseFloat(String(incomeData.totalDiscount)) || 0,
           dailyBreakdown: dailyBreakdown.map((day) => ({
-            date: day.date,
-            invoiceCount: parseInt(day.invoiceCount) || 0,
-            dailyIncome: parseFloat(day.dailyIncome) || 0,
-            dailyPaid: parseFloat(day.dailyPaid) || 0,
-            dailyBalance: parseFloat(day.dailyBalance) || 0,
+            date: String(day.date),
+            invoiceCount: parseInt(String(day.invoiceCount)) || 0,
+            dailyIncome: parseFloat(String(day.dailyIncome)) || 0,
+            dailyPaid: parseFloat(String(day.dailyPaid)) || 0,
+            dailyBalance: parseFloat(String(day.dailyBalance)) || 0,
           })),
           statusBreakdown: statusBreakdown.map((status) => ({
-            status: status.status || "Unknown",
-            count: parseInt(status.count) || 0,
-            total: parseFloat(status.total) || 0,
+            status: String(status.status || "Unknown"),
+            count: parseInt(String(status.count)) || 0,
+            total: parseFloat(String(status.total)) || 0,
           })),
         },
       },
