@@ -16,7 +16,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Get income data (sum of grandTotal) for the date range
-    const incomeResult = await query(
+    const incomeResult = await query<{
+      totalInvoices: string | number;
+      totalIncome: string | number;
+      totalPaid: string | number;
+      totalBalance: string | number;
+      totalDiscount: string | number;
+    }>(
       `SELECT
         COUNT(*) as "totalInvoices",
         COALESCE(SUM(grandtotal), 0) as "totalIncome",
@@ -29,7 +35,13 @@ export async function GET(request: NextRequest) {
     );
 
     // Get daily breakdown
-    const dailyBreakdownResult = await query(
+    const dailyBreakdownResult = await query<{
+      date: string;
+      invoiceCount: string | number;
+      dailyIncome: string | number;
+      dailyPaid: string | number;
+      dailyBalance: string | number;
+    }>(
       `SELECT
         date,
         COUNT(*) as "invoiceCount",
@@ -44,7 +56,11 @@ export async function GET(request: NextRequest) {
     );
 
     // Get status breakdown
-    const statusBreakdownResult = await query(
+    const statusBreakdownResult = await query<{
+      status: string;
+      count: string | number;
+      total: string | number;
+    }>(
       `SELECT
         status,
         COUNT(*) as "count",

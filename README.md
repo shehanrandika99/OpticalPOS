@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # My App - Production-Ready Next.js Application
 
 This is a [Next.js](https://nextjs.org) project with production-ready database connectivity to Neon PostgreSQL.
@@ -140,3 +141,6 @@ curl http://localhost:3000/api/test-db
 ## License
 
 Private project
+=======
+# OpticalPOS
+>>>>>>> 813c470b06656c4635cdac1d24c2d90c8abcbdb8
