@@ -1,146 +1,117 @@
-<<<<<<< HEAD
-# My App - Production-Ready Next.js Application
+# OpticalPOS - Invoice Management System
 
-This is a [Next.js](https://nextjs.org) project with production-ready database connectivity to Neon PostgreSQL.
+A comprehensive Point of Sale (POS) system built with Next.js 16, PostgreSQL, and TypeScript for optical store management.
 
 ## Features
 
-- ✅ Production-ready database connection pooling
-- ✅ Environment variable validation
-- ✅ Structured logging system
-- ✅ Type-safe TypeScript implementation
-- ✅ Proper error handling and sanitization
-- ✅ Security best practices
-- ✅ Connection timeout handling
-- ✅ Database connection monitoring
+- ✅ **User Management** - User registration, authentication, and role management
+- ✅ **Product Management** - Product inventory with stock tracking and low stock alerts
+- ✅ **Invoice System** - Create, manage, and track invoices with payment handling
+- ✅ **Reports & Analytics** - Income reports with date range filtering
+- ✅ **JWT Authentication** - Secure user authentication
+- ✅ **SHA-256 Password Hashing** - Secure password storage
+- ✅ **Modern UI** - Beautiful, responsive design with Tailwind CSS
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Database**: PostgreSQL
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: JWT (JSON Web Tokens)
+- **Package Manager**: pnpm
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (or npm/yarn)
+- PostgreSQL database
 
 ### Installation
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/YOUR_USERNAME/OpticalPOS.git
+cd OpticalPOS
+```
+
+2. Install dependencies:
 ```bash
 pnpm install
 ```
 
-2. Create a `.env.local` file in the root directory:
-```bash
-cp .env.example .env.local
-```
-
-3. Update `.env.local` with your database connection string:
+3. Create a `.env.local` file in the root directory:
 ```env
-DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require&channel_binding=require
-NODE_ENV=development
+DATABASE_URL=postgresql://user:password@host:port/database
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRES_IN=1h
 ```
 
-### Environment Variables
+4. Setup database:
+```bash
+pnpm setup-db
+```
 
-Required environment variables (see `.env.example` for full list):
-
-- `DATABASE_URL` - PostgreSQL connection string (required)
-- `NODE_ENV` - Environment: development, production, or test
-- `DB_POOL_MAX` - Maximum pool connections (default: 20)
-- `DB_POOL_MIN` - Minimum pool connections (default: 2)
-- `DB_POOL_IDLE_TIMEOUT` - Idle timeout in ms (default: 30000)
-- `DB_POOL_CONNECTION_TIMEOUT` - Connection timeout in ms (default: 10000)
-
-### Development
-
-Run the development server:
-
+5. Run the development server:
 ```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-### Production Build
-
-```bash
-pnpm build
-pnpm start
-```
+Open [http://localhost:3000](http://localhost:3000) to see the application.
 
 ## Project Structure
 
 ```
 my-app/
 ├── app/
-│   ├── api/
-│   │   └── test-db/          # Database test API endpoint
-│   ├── components/
-│   │   └── DBTest.tsx        # Database connection test component
-│   └── page.tsx              # Home page
+│   ├── api/              # API routes
+│   │   ├── auth/         # Authentication endpoints
+│   │   ├── users/        # User management endpoints
+│   │   ├── products/     # Product management endpoints
+│   │   ├── invoices/    # Invoice endpoints
+│   │   └── reports/      # Reports endpoints
+│   ├── components/       # React components
+│   └── [pages]/          # Next.js pages
 ├── lib/
-│   ├── config/
-│   │   └── env.ts            # Environment variable validation
-│   ├── db/
-│   │   └── index.ts          # Database connection pool & utilities
-│   ├── types/
-│   │   └── database.ts       # Database TypeScript types
-│   └── utils/
-│       └── logger.ts          # Centralized logging utility
-└── .env.local                 # Environment variables (not in git)
+│   ├── config/           # Configuration files
+│   ├── db/               # Database utilities
+│   ├── types/            # TypeScript types
+│   └── utils/            # Utility functions
+└── scripts/              # Database setup scripts
 ```
 
-## Database Connection
+## Environment Variables
 
-The application uses a connection pool for efficient database management:
+Required environment variables:
 
-- **Connection Pooling**: Configurable min/max connections
-- **SSL/TLS**: Secure connections with proper certificate validation
-- **Error Handling**: Comprehensive error handling with logging
-- **Monitoring**: Pool statistics and connection health checks
+- `DATABASE_URL` - PostgreSQL connection string (required)
+- `JWT_SECRET` - Secret key for JWT tokens
+- `JWT_EXPIRES_IN` - JWT token expiration time (default: 1h)
 
-### Testing Database Connection
+## Database Schema
 
-1. Visit the home page
-2. Click "Test Connection" button
-3. View connection status and server timestamp
+The application uses the following main tables:
 
-Or test via API:
-```bash
-curl http://localhost:3000/api/test-db
-```
+- `users` - User accounts
+- `products` - Product inventory
+- `invoice` - Invoice records
+- `inv_has_product` - Invoice items
 
-## Production Considerations
+Run `pnpm setup-db` to create all tables.
 
-### Security
+## Deployment
 
-- Environment variables are validated at startup
-- Error messages are sanitized in production
-- SSL connections are enforced in production
-- Sensitive error details are not exposed to clients
+### Vercel Deployment
 
-### Performance
+See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed deployment instructions.
 
-- Connection pooling reduces overhead
-- Query timeouts prevent hanging requests
-- Proper connection lifecycle management
-- Pool statistics for monitoring
-
-### Monitoring
-
-- Structured logging with timestamps
-- Error tracking with context
-- Connection pool statistics
-- Query performance metrics
-
-## Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [PostgreSQL Node.js Driver](https://node-postgres.com/)
-- [Neon Database](https://neon.tech/)
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
 
 ## License
 
 Private project
-=======
-# OpticalPOS
->>>>>>> 813c470b06656c4635cdac1d24c2d90c8abcbdb8
