@@ -8,10 +8,11 @@ import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 import type { DatabaseConnectionResult, DatabaseConfig } from '@/lib/types/database';
 
+// Lazy pool initialization - only create when needed (not during build)
+let pool: Pool | null = null;
+
 // Parse SSL mode from connection string or use secure defaults
-const getSSLConfig = () => {
-  const connectionString = env.DATABASE_URL;
-  
+const getSSLConfig = (connectionString: string) => {
   // Neon and most cloud providers use SSL but may require rejectUnauthorized: false
   // Check if it's a Neon connection (contains 'neon.tech' or 'pooler')
   const isNeon = connectionString.includes('neon.tech') || connectionString.includes('pooler');
@@ -37,33 +38,48 @@ const getSSLConfig = () => {
   };
 };
 
-// Database pool configuration
-const poolConfig: DatabaseConfig = {
-  connectionString: env.DATABASE_URL,
-  max: env.DB_POOL_MAX,
-  min: env.DB_POOL_MIN,
-  idleTimeoutMillis: env.DB_POOL_IDLE_TIMEOUT,
-  connectionTimeoutMillis: env.DB_POOL_CONNECTION_TIMEOUT,
-  ssl: getSSLConfig(),
-};
+// Get or create the database pool (lazy initialization)
+function getPool(): Pool {
+  if (!pool) {
+    // Validate DATABASE_URL at runtime
+    if (!env.DATABASE_URL) {
+      throw new Error(
+        'DATABASE_URL is required but not set. ' +
+        'Please check your environment configuration.'
+      );
+    }
 
-// Create connection pool with proper configuration
-const pool = new Pool(poolConfig);
+    // Database pool configuration
+    const poolConfig: DatabaseConfig = {
+      connectionString: env.DATABASE_URL,
+      max: env.DB_POOL_MAX,
+      min: env.DB_POOL_MIN,
+      idleTimeoutMillis: env.DB_POOL_IDLE_TIMEOUT,
+      connectionTimeoutMillis: env.DB_POOL_CONNECTION_TIMEOUT,
+      ssl: getSSLConfig(env.DATABASE_URL),
+    };
 
-// Handle pool errors
-pool.on('error', (err) => {
-  logger.error('Unexpected database pool error', err, {
-    code: 'POOL_ERROR',
-  });
-});
+    // Create connection pool with proper configuration
+    pool = new Pool(poolConfig);
 
-pool.on('connect', () => {
-  logger.debug('New database connection established');
-});
+    // Handle pool errors
+    pool.on('error', (err) => {
+      logger.error('Unexpected database pool error', err, {
+        code: 'POOL_ERROR',
+      });
+    });
 
-pool.on('remove', () => {
-  logger.debug('Database connection removed from pool');
-});
+    pool.on('connect', () => {
+      logger.debug('New database connection established');
+    });
+
+    pool.on('remove', () => {
+      logger.debug('Database connection removed from pool');
+    });
+  }
+  
+  return pool;
+}
 
 /**
  * Test database connection with timeout
@@ -84,8 +100,10 @@ export async function testConnection(): Promise<DatabaseConnectionResult> {
     // Race between connection and timeout
     const connectionPromise = (async () => {
       try {
+        // Get pool (creates it if needed)
+        const dbPool = getPool();
         // Acquire connection from pool
-        client = await pool.connect();
+        client = await dbPool.connect();
         
         // Test query
         const result: QueryResult<{ now: Date }> = await client.query('SELECT NOW() as now');
@@ -176,7 +194,8 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   const start = Date.now();
   
   try {
-    const result = await pool.query<T>(text, params);
+    const dbPool = getPool();
+    const result = await dbPool.query<T>(text, params);
     const duration = Date.now() - start;
     
     logger.debug('Database query executed', {
@@ -203,7 +222,8 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
  * Remember to release it when done!
  */
 export async function getClient(): Promise<PoolClient> {
-  return pool.connect();
+  const dbPool = getPool();
+  return dbPool.connect();
 }
 
 /**
@@ -212,8 +232,11 @@ export async function getClient(): Promise<PoolClient> {
  */
 export async function closePool(): Promise<void> {
   try {
-    await pool.end();
-    logger.info('Database pool closed successfully');
+    if (pool) {
+      await pool.end();
+      pool = null;
+      logger.info('Database pool closed successfully');
+    }
   } catch (error) {
     logger.error('Error closing database pool', error);
     throw error;
@@ -224,13 +247,17 @@ export async function closePool(): Promise<void> {
  * Get pool statistics for monitoring
  */
 export function getPoolStats() {
+  if (!pool) {
+    return {
+      totalCount: 0,
+      idleCount: 0,
+      waitingCount: 0,
+    };
+  }
   return {
     totalCount: pool.totalCount,
     idleCount: pool.idleCount,
     waitingCount: pool.waitingCount,
   };
 }
-
-// Export the pool for advanced usage
-export { pool };
 
