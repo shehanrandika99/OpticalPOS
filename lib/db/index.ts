@@ -3,7 +3,7 @@
  * Production-ready PostgreSQL connection management
  */
 
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 import type { DatabaseConnectionResult, DatabaseConfig } from '@/lib/types/database';
@@ -169,7 +169,7 @@ export async function testConnection(): Promise<DatabaseConnectionResult> {
 /**
  * Execute a database query with proper error handling
  */
-export async function query<T = unknown>(
+export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<T>> {
