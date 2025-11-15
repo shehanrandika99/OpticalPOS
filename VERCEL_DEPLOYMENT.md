@@ -5,7 +5,11 @@
 
 ## Step 2: Environment Variables Setup in Vercel
 
-After deploying to Vercel, you need to add environment variables:
+**⚠️ IMPORTANT: This is the most common issue!**
+
+After deploying to Vercel, you **MUST** add environment variables. Without `DATABASE_URL`, your app will fail at runtime.
+
+### Quick Setup:
 
 1. Go to your Vercel project dashboard
 2. Click on **Settings** → **Environment Variables**
@@ -18,6 +22,8 @@ DATABASE_URL=postgresql://username:password@host:port/database
 JWT_SECRET=your-secret-key-here
 JWT_EXPIRES_IN=1h
 ```
+
+**📖 For detailed step-by-step instructions in Sinhala/English, see [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)**
 
 ### How to get DATABASE_URL:
 

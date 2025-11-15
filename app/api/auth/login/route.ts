@@ -86,10 +86,20 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Login error:", error);
+    
+    // Check if it's a database configuration error
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const isDatabaseConfigError = errorMessage.includes("DATABASE_URL") || 
+                                   errorMessage.includes("database") ||
+                                   errorMessage.includes("connection");
+    
     return NextResponse.json(
       {
         error: "Failed to process login",
-        details: error instanceof Error ? error.message : "Unknown error",
+        details: errorMessage,
+        ...(isDatabaseConfigError && {
+          hint: "Please check your DATABASE_URL environment variable in Vercel settings"
+        }),
       },
       { status: 500 }
     );
