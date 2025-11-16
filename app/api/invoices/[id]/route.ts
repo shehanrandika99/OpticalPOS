@@ -32,6 +32,7 @@ export async function GET(
         grandtotal as "grandTotal",
         discount,
         paid,
+        due,
         balance,
         special_note as "specialNote",
         status,
@@ -132,13 +133,16 @@ export async function PUT(
     const newPaid = body.paid !== undefined ? Number(body.paid) || 0 : Number(currentInvoice.paid) || 0;
     const grandTotal = Number(currentInvoice.grandTotal) || 0;
     
-    // Calculate balance (if paid > grandTotal, balance = 0)
-    const balance = Math.max(0, grandTotal - newPaid);
+    // Calculate due: amount customer owes (grandTotal - paid, if grandTotal > paid, else 0)
+    const due = Math.max(0, grandTotal - newPaid);
     
-    // Ensure balance is a valid number
-    if (isNaN(balance)) {
+    // Calculate balance: change/overpayment (paid - grandTotal, if paid > grandTotal, else 0)
+    const balance = Math.max(0, newPaid - grandTotal);
+    
+    // Ensure calculations are valid
+    if (isNaN(due) || isNaN(balance)) {
       return NextResponse.json(
-        { error: "Invalid balance calculation" },
+        { error: "Invalid due or balance calculation" },
         { status: 400 }
       );
     }
@@ -146,13 +150,13 @@ export async function PUT(
     // Update invoice
     const result = await query<Invoice>(
       `UPDATE invoice
-      SET paid = $1, balance = $2, updated_at = CURRENT_TIMESTAMP
-      WHERE iid = $3
+      SET paid = $1, due = $2, balance = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE iid = $4
       RETURNING iid, date, time, userid as "userId",
       customer_name as "customerName", customer_contactno as "customerContactNo",
       customer_nic as "customerNIC", total, grandtotal as "grandTotal",
-      discount, paid, balance, special_note as "specialNote", status`,
-      [newPaid, balance, invoiceId]
+      discount, paid, due, balance, special_note as "specialNote", status`,
+      [newPaid, due, balance, invoiceId]
     );
 
     return NextResponse.json(

@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
         grandtotal as "grandTotal",
         discount,
         paid,
+        due,
         balance,
         special_note as "specialNote",
         status,
@@ -141,23 +142,27 @@ export async function POST(request: NextRequest) {
     const currentDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     const currentTime = new Date().toTimeString().split(" ")[0]; // HH:MM:SS
 
-    // Ensure all numeric values are properly converted and calculate balance
+    // Ensure all numeric values are properly converted
     const numTotal = Number(total) || 0;
     const numGrandTotal = Number(grandTotal) || 0;
     const numDiscount = Number(discount) || 0;
     const numPaid = Number(paid) || 0;
-    // Calculate balance: if paid > grandTotal, balance = 0 (full payment)
-    const numBalance = Math.max(0, numGrandTotal - numPaid);
+    
+    // Calculate due: amount customer owes (grandTotal - paid, if grandTotal > paid, else 0)
+    const numDue = Math.max(0, numGrandTotal - numPaid);
+    
+    // Calculate balance: change/overpayment (paid - grandTotal, if paid > grandTotal, else 0)
+    const numBalance = Math.max(0, numPaid - numGrandTotal);
 
     // Start transaction - Insert invoice
     const invoiceResult = await query<Invoice>(
       `INSERT INTO invoice (
         date, time, userid, customer_name, customer_contactno, customer_nic,
-        total, grandtotal, discount, paid, balance, special_note, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        total, grandtotal, discount, paid, due, balance, special_note, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING iid, date, time, userid, customer_name as "customerName",
       customer_contactno as "customerContactNo", customer_nic as "customerNIC",
-      total, grandtotal as "grandTotal", discount, paid, balance, special_note as "specialNote", status`,
+      total, grandtotal as "grandTotal", discount, paid, due, balance, special_note as "specialNote", status`,
       [
         currentDate,
         currentTime,
@@ -169,6 +174,7 @@ export async function POST(request: NextRequest) {
         numGrandTotal,
         numDiscount,
         numPaid,
+        numDue,
         numBalance,
         specialNote || null,
         "Pending", // Default status
@@ -214,6 +220,7 @@ export async function POST(request: NextRequest) {
           grandTotal: invoice.grandTotal,
           discount: invoice.discount,
           paid: invoice.paid,
+          due: invoice.due,
           balance: invoice.balance,
           specialNote: invoice.specialNote,
           status: invoice.status,

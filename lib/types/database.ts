@@ -78,7 +78,8 @@ export interface Invoice {
   grandTotal: number;
   discount: number;
   paid: number;
-  balance: number;
+  due: number; // Amount customer owes (grandTotal - paid, if grandTotal > paid)
+  balance: number; // Change/overpayment (paid - grandTotal, if paid > grandTotal)
   specialNote?: string;
   status?: "Pending" | "Ready to Deliver" | "Delivered";
   createdAt?: Date | string;

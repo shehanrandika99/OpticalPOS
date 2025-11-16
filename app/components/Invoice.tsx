@@ -241,11 +241,12 @@ export default function Invoice() {
   const numDiscount = Number(discount) || 0;
   const grandTotal = Math.max(0, subtotal - numDiscount);
 
-  // Calculate balance (if paid > grandTotal, balance = 0, customer paid in full)
-  // Balance = amount customer still needs to pay
-  // If customer pays more than grand total, balance should be 0 (not negative)
+  // Calculate due: amount customer owes (grandTotal - paid, if grandTotal > paid, else 0)
   const numPaid = Number(paid) || 0;
-  const balance = Math.max(0, grandTotal - numPaid);
+  const due = Math.max(0, grandTotal - numPaid);
+  
+  // Calculate balance: change/overpayment (paid - grandTotal, if paid > grandTotal, else 0)
+  const balance = Math.max(0, numPaid - grandTotal);
   
   // Check if customer paid in full or overpaid
   const isPaidInFull = numPaid >= grandTotal;
@@ -459,13 +460,24 @@ export default function Invoice() {
               <span>${formatPrice(paid)}</span>
             </div>
             ` : ""}
-            <div class="totals-row balance">
-              <span>Balance:</span>
-              <span style="color: ${balance > 0 ? "#d32f2f" : "#2e7d32"}">
-                ${formatPrice(balance)}
-                ${balance === 0 && numPaid >= grandTotal ? " (Paid in Full)" : ""}
-              </span>
+            ${due > 0 ? `
+            <div class="totals-row">
+              <span>Due:</span>
+              <span style="color: #d32f2f;">${formatPrice(due)}</span>
             </div>
+            ` : ""}
+            ${balance > 0 ? `
+            <div class="totals-row">
+              <span>Balance (Change):</span>
+              <span style="color: #1976d2;">${formatPrice(balance)}</span>
+            </div>
+            ` : ""}
+            ${due === 0 && balance === 0 && numPaid >= grandTotal ? `
+            <div class="totals-row balance">
+              <span>Status:</span>
+              <span style="color: #2e7d32;">Paid in Full</span>
+            </div>
+            ` : ""}
           </div>
 
           ${specialNote ? `
@@ -925,23 +937,41 @@ export default function Invoice() {
                 />
               </div>
 
-              <div className="flex justify-between items-center py-3 border-t-2 border-gray-300">
-                <span className={`text-lg font-bold ${
-                  balance > 0 ? "text-red-600" : "text-green-600"
-                }`}>
-                  Balance:
-                </span>
-                <span className={`text-lg font-bold ${
-                  balance > 0 ? "text-red-600" : "text-green-600"
-                }`}>
-                  {formatPrice(balance)}
-                  {isPaidInFull && balance === 0 && (
-                    <span className="ml-2 text-sm font-normal text-green-600">
-                      (Paid in Full)
-                    </span>
-                  )}
-                </span>
-              </div>
+              {/* Due - Amount customer owes */}
+              {due > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                  <span className="text-base font-semibold text-red-600">
+                    Due:
+                  </span>
+                  <span className="text-base font-semibold text-red-600">
+                    {formatPrice(due)}
+                  </span>
+                </div>
+              )}
+
+              {/* Balance - Change/Overpayment */}
+              {balance > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                  <span className="text-base font-semibold text-blue-600">
+                    Balance (Change):
+                  </span>
+                  <span className="text-base font-semibold text-blue-600">
+                    {formatPrice(balance)}
+                  </span>
+                </div>
+              )}
+
+              {/* Paid in Full indicator */}
+              {isPaidInFull && due === 0 && balance === 0 && (
+                <div className="flex justify-between items-center py-3 border-t-2 border-green-300">
+                  <span className="text-lg font-bold text-green-600">
+                    Status:
+                  </span>
+                  <span className="text-lg font-bold text-green-600">
+                    Paid in Full
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Special Note */}
@@ -1007,7 +1037,12 @@ export default function Invoice() {
                     const numGrandTotal = Number(grandTotal) || 0;
                     const numDiscount = Number(discount) || 0;
                     const numPaid = Number(paid) || 0;
-                    const numBalance = Math.max(0, numGrandTotal - numPaid);
+                    
+                    // Calculate due: amount customer owes (grandTotal - paid, if grandTotal > paid, else 0)
+                    const numDue = Math.max(0, numGrandTotal - numPaid);
+                    
+                    // Calculate balance: change/overpayment (paid - grandTotal, if paid > grandTotal, else 0)
+                    const numBalance = Math.max(0, numPaid - numGrandTotal);
 
                     // Prepare invoice data
                     const invoiceData = {
@@ -1019,6 +1054,7 @@ export default function Invoice() {
                       grandTotal: numGrandTotal,
                       discount: numDiscount,
                       paid: numPaid,
+                      due: numDue,
                       balance: numBalance,
                       specialNote: specialNote || null,
                       items: invoiceItems.map((item) => ({
@@ -1056,9 +1092,7 @@ export default function Invoice() {
                       // If updating existing invoice payment
                       if (editingInvoiceId) {
                         const updatedInvoice = data.invoice;
-                        setPaid(updatedInvoice.paid || 0);
-                        setSavedInvoiceId(updatedInvoice.iid);
-                        alert(`Payment updated successfully! Balance: ${formatPrice(updatedInvoice.balance)}`);
+                        alert(`Payment updated successfully! Balance: ${formatPrice(updatedInvoice.balance || 0)}`);
                         
                         // If print checkbox is enabled, print the invoice
                         if (printAfterSave) {
@@ -1066,6 +1100,23 @@ export default function Invoice() {
                             handlePrintInvoice(updatedInvoice.iid);
                           }, 500);
                         }
+                        
+                        // Clear form data after successful payment update
+                        setInvoiceItems([]);
+                        setDiscount(0);
+                        setSpecialNote("");
+                        setSearchQuery("");
+                        setSelectedProduct(null);
+                        setCustomerName("");
+                        setCustomerContact("");
+                        setCustomerNIC("");
+                        setPaid(0);
+                        setEditingInvoiceId(null);
+                        setSavedInvoiceId(null);
+                        setPrintAfterSave(false);
+                        
+                        // Navigate to clean invoice page (remove query parameter)
+                        router.push("/invoice");
                       } else {
                         // New invoice
                         const invoiceId = data.invoice?.iid || data.invoice?.invoice?.iid || null;

@@ -281,7 +281,7 @@ export default function ViewInvoice() {
                       Paid
                     </th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                      Balance
+                      Due / Balance
                     </th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
                       Status
@@ -293,7 +293,8 @@ export default function ViewInvoice() {
                 </thead>
                 <tbody>
                   {invoices.map((invoice) => {
-                    const hasDue = invoice.balance > 0;
+                    const hasDue = (invoice.due || 0) > 0;
+                    const hasBalance = (invoice.balance || 0) > 0;
                     const isReadyToDeliver = invoice.status === "Ready to Deliver";
                     const showDuePayment = isReadyToDeliver && hasDue;
                     
@@ -321,15 +322,20 @@ export default function ViewInvoice() {
                           {formatPrice(invoice.paid)}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex flex-col">
-                            <span className={`text-sm font-semibold ${
-                              hasDue ? "text-red-600" : "text-green-600"
-                            }`}>
-                              {formatPrice(invoice.balance)}
-                            </span>
-                            {showDuePayment && (
-                              <span className="text-xs text-red-600 font-medium mt-1">
-                                Due: {formatPrice(invoice.balance)}
+                          <div className="flex flex-col gap-1">
+                            {hasDue && (
+                              <span className="text-sm font-semibold text-red-600">
+                                Due: {formatPrice(invoice.due || 0)}
+                              </span>
+                            )}
+                            {hasBalance && (
+                              <span className="text-sm font-semibold text-blue-600">
+                                Balance: {formatPrice(invoice.balance || 0)}
+                              </span>
+                            )}
+                            {!hasDue && !hasBalance && (
+                              <span className="text-sm font-semibold text-green-600">
+                                Paid in Full
                               </span>
                             )}
                           </div>
