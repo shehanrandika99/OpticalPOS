@@ -129,7 +129,7 @@ export default function Login() {
           </form>
 
           {/* Sign Up Link */}
-          <div className="text-center">
+          {/* <div className="text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link
@@ -139,7 +139,7 @@ export default function Login() {
                 Register here
               </Link>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
