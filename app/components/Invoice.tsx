@@ -242,11 +242,14 @@ export default function Invoice() {
   const grandTotal = Math.max(0, subtotal - numDiscount);
 
   // Calculate balance (if paid > grandTotal, balance = 0, customer paid in full)
+  // Balance = amount customer still needs to pay
+  // If customer pays more than grand total, balance should be 0 (not negative)
   const numPaid = Number(paid) || 0;
   const balance = Math.max(0, grandTotal - numPaid);
   
-  // Check if customer paid in full
+  // Check if customer paid in full or overpaid
   const isPaidInFull = numPaid >= grandTotal;
+  const isOverpaid = numPaid > grandTotal;
 
   // Format price
   const formatPrice = (price: number) => {
@@ -458,7 +461,10 @@ export default function Invoice() {
             ` : ""}
             <div class="totals-row balance">
               <span>Balance:</span>
-              <span style="color: ${balance >= 0 ? "#000" : "#d32f2f"}">${formatPrice(balance)}</span>
+              <span style="color: ${balance > 0 ? "#d32f2f" : "#2e7d32"}">
+                ${formatPrice(balance)}
+                ${balance === 0 && numPaid >= grandTotal ? " (Paid in Full)" : ""}
+              </span>
             </div>
           </div>
 
@@ -921,14 +927,19 @@ export default function Invoice() {
 
               <div className="flex justify-between items-center py-3 border-t-2 border-gray-300">
                 <span className={`text-lg font-bold ${
-                  balance >= 0 ? "text-gray-900" : "text-red-600"
+                  balance > 0 ? "text-red-600" : "text-green-600"
                 }`}>
                   Balance:
                 </span>
                 <span className={`text-lg font-bold ${
-                  balance >= 0 ? "text-gray-900" : "text-red-600"
+                  balance > 0 ? "text-red-600" : "text-green-600"
                 }`}>
                   {formatPrice(balance)}
+                  {isPaidInFull && balance === 0 && (
+                    <span className="ml-2 text-sm font-normal text-green-600">
+                      (Paid in Full)
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
