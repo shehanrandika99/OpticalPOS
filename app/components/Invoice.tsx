@@ -231,6 +231,40 @@ export default function Invoice() {
     setEditQty(1);
   };
 
+  // Handle contact number input - only numbers, max 10 digits
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow numbers
+    const numbersOnly = value.replace(/[^0-9]/g, '');
+    // Limit to 10 digits
+    if (numbersOnly.length <= 10) {
+      setCustomerContact(numbersOnly);
+    }
+  };
+
+  // Handle NIC input - numbers only, allow V or X at the end
+  const handleNICChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase(); // Convert to uppercase
+    // Allow numbers and V/X at the end
+    // Pattern: numbers only, or numbers followed by V or X
+    const nicPattern = /^[0-9]*[VX]?$/;
+    
+    if (nicPattern.test(value)) {
+      // If it ends with V or X, make sure there are numbers before it
+      if (value.length > 0 && (value.endsWith('V') || value.endsWith('X'))) {
+        const numbersPart = value.slice(0, -1);
+        if (numbersPart.length > 0) {
+          setCustomerNIC(value);
+        } else {
+          // Can't have just V or X
+          setCustomerNIC('');
+        }
+      } else {
+        setCustomerNIC(value);
+      }
+    }
+  };
+
   // Calculate subtotal (sum of all items)
   const subtotal = invoiceItems.reduce((sum, item) => {
     const itemTotal = Number(item.total) || 0;
@@ -303,6 +337,21 @@ export default function Invoice() {
             .header h1 {
               margin: 0;
               font-size: 28px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+            }
+            .header .icon {
+              font-size: 32px;
+            }
+            .header .company-info {
+              margin-top: 15px;
+              font-size: 14px;
+              line-height: 1.8;
+            }
+            .header .company-info p {
+              margin: 5px 0;
             }
             .invoice-info {
               display: flex;
@@ -390,8 +439,17 @@ export default function Invoice() {
         </head>
         <body>
           <div class="header">
-            <h1>NEPTUNE OPTICAL</h1>
-            <h2 style="margin: 10px 0; font-size: 24px;">INVOICE</h2>
+            <h1>
+              <span class="icon"></span>
+              NEPTUNE MEDICARE
+              <span class="icon"></span>
+            </h1>
+            <div class="company-info">
+              <p>Address: Gatamanna Road, Beliatta</p>
+              <p>Contact: 047 2265200 |  071 5534403</p>
+        
+            </div>
+            <h2 style="margin: 15px 0 10px 0; font-size: 24px;">INVOICE</h2>
             <p style="font-size: 18px; font-weight: bold; margin-top: 10px;">Invoice ID: #${invoiceIdToPrint}</p>
           </div>
 
@@ -570,7 +628,8 @@ export default function Invoice() {
                     id="customerContact"
                     type="tel"
                     value={customerContact}
-                    onChange={(e) => setCustomerContact(e.target.value)}
+                    onChange={handleContactChange}
+                    maxLength={10}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none text-gray-900"
                     placeholder="Enter contact number"
                   />
@@ -586,9 +645,9 @@ export default function Invoice() {
                     id="customerNIC"
                     type="text"
                     value={customerNIC}
-                    onChange={(e) => setCustomerNIC(e.target.value)}
+                    onChange={handleNICChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none text-gray-900"
-                    placeholder="Enter NIC (9 digits with V/X or 12 digits with V/X)"
+                    placeholder="Enter NIC (numbers only, V or X at the end)"
                   />
                 </div>
               </div>
